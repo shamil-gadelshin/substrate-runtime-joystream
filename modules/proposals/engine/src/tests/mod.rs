@@ -59,7 +59,6 @@ impl Default for ProposalParametersFixture {
 struct DummyProposalFixture {
     parameters: ProposalParameters<u64, u64>,
     origin: RawOrigin<u64>,
-    proposal_type: u32,
     proposal_code: Vec<u8>,
     title: Vec<u8>,
     body: Vec<u8>,
@@ -68,10 +67,11 @@ struct DummyProposalFixture {
 
 impl Default for DummyProposalFixture {
     fn default() -> Self {
-        let dummy_proposal = DummyExecutable {
-            title: b"title".to_vec(),
-            body: b"body".to_vec(),
-        };
+        let dummy_proposal = crate::Call::<Test>::text_proposal(
+            b"title".to_vec(),
+            b"body".to_vec(),
+            b"text".to_vec(),
+        );
 
         DummyProposalFixture {
             parameters: ProposalParameters {
@@ -84,10 +84,9 @@ impl Default for DummyProposalFixture {
                 required_stake: None,
             },
             origin: RawOrigin::Signed(1),
-            proposal_type: dummy_proposal.proposal_type(),
             proposal_code: dummy_proposal.encode(),
-            title: dummy_proposal.title,
-            body: dummy_proposal.body,
+            title: b"title".to_vec(),
+            body: b"body".to_vec(),
             stake_balance: None,
         }
     }
@@ -117,9 +116,8 @@ impl DummyProposalFixture {
         }
     }
 
-    fn with_proposal_type_and_code(self, proposal_type: u32, proposal_code: Vec<u8>) -> Self {
+    fn with_proposal_type_and_code(self, proposal_code: Vec<u8>) -> Self {
         DummyProposalFixture {
-            proposal_type,
             proposal_code,
             ..self
         }
@@ -133,7 +131,6 @@ impl DummyProposalFixture {
                 self.title,
                 self.body,
                 self.stake_balance,
-                self.proposal_type,
                 self.proposal_code,
             ),
             result
@@ -330,7 +327,6 @@ fn proposal_execution_succeeds() {
         assert_eq!(
             proposal,
             Proposal {
-                proposal_type: 1,
                 parameters: parameters_fixture.params(),
                 proposer_id: 1,
                 created_at: 1,
@@ -362,7 +358,7 @@ fn proposal_execution_failed() {
 
         let dummy_proposal = DummyProposalFixture::default()
             .with_parameters(parameters_fixture.params())
-            .with_proposal_type_and_code(faulty_proposal.proposal_type(), faulty_proposal.encode());
+            .with_proposal_type_and_code(faulty_proposal.encode());
 
         let proposal_id = dummy_proposal.create_proposal_and_assert(Ok(())).unwrap();
 
@@ -379,7 +375,6 @@ fn proposal_execution_failed() {
         assert_eq!(
             proposal,
             Proposal {
-                proposal_type: faulty_proposal.proposal_type(),
                 parameters: parameters_fixture.params(),
                 proposer_id: 1,
                 created_at: 1,
@@ -572,7 +567,6 @@ fn cancel_proposal_succeeds() {
         assert_eq!(
             proposal,
             Proposal {
-                proposal_type: 1,
                 parameters: parameters_fixture.params(),
                 proposer_id: 1,
                 created_at: 1,
@@ -643,7 +637,6 @@ fn veto_proposal_succeeds() {
         assert_eq!(
             proposal,
             Proposal {
-                proposal_type: 1,
                 parameters: parameters_fixture.params(),
                 proposer_id: 1,
                 created_at: 1,
@@ -776,7 +769,6 @@ fn create_proposal_and_expire_it() {
         assert_eq!(
             proposal,
             Proposal {
-                proposal_type: 1,
                 parameters: parameters_fixture.params(),
                 proposer_id: 1,
                 created_at: 1,
@@ -820,7 +812,6 @@ fn proposal_execution_postponed_because_of_grace_period() {
         assert_eq!(
             proposal,
             Proposal {
-                proposal_type: 1,
                 parameters: parameters_fixture.params(),
                 proposer_id: 1,
                 created_at: 1,
@@ -865,7 +856,6 @@ fn proposal_execution_succeeds_after_the_grace_period() {
         let mut proposal = <crate::Proposals<Test>>::get(proposal_id);
 
         let mut expected_proposal = Proposal {
-            proposal_type: 1,
             parameters: parameters_fixture.params(),
             proposer_id: 1,
             created_at: 1,
@@ -971,7 +961,6 @@ fn create_dummy_proposal_succeeds_with_stake() {
         assert_eq!(
             proposal,
             Proposal {
-                proposal_type: 1,
                 parameters: parameters_fixture.params(),
                 proposer_id: 1,
                 created_at: 1,
@@ -1214,7 +1203,6 @@ fn finalize_proposal_failed_using_stake_mocks() {
             assert_eq!(
                 proposal,
                 Proposal {
-                    proposal_type: 1,
                     parameters: parameters_fixture.params(),
                     proposer_id: 1,
                     created_at: 1,

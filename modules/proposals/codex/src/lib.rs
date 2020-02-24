@@ -11,19 +11,17 @@
 // Do not delete! Cannot be uncommented by default, because of Parity decl_module! issue.
 //#![warn(missing_docs)]
 
-pub use proposal_types::{ProposalType, RuntimeUpgradeProposalExecutable, TextProposalExecutable};
-
-mod proposal_types;
 #[cfg(test)]
 mod tests;
 
 use codec::Encode;
 use proposal_engine::*;
 use rstd::clone::Clone;
-use rstd::marker::PhantomData;
 use rstd::prelude::*;
+use rstd::str::from_utf8;
 use rstd::vec::Vec;
-use srml_support::{decl_error, decl_module, decl_storage, ensure};
+use srml_support::{decl_module, decl_storage, ensure, print};
+use system::ensure_root;
 
 /// 'Proposals codex' substrate module Trait
 pub trait Trait: system::Trait + proposal_engine::Trait {}
@@ -43,22 +41,6 @@ const DEFAULT_TEXT_PROPOSAL_MAX_LEN: u32 = 20_000;
 // Defines max allowed text proposal text length. Can be override in the config.
 const DEFAULT_RUNTIME_PROPOSAL_WASM_MAX_LEN: u32 = 20_000;
 
-decl_error! {
-    pub enum Error {
-        /// The size of the provided text for text proposal exceeded the limit
-        TextProposalSizeExceeded,
-
-        /// Provided text for text proposal is empty
-        TextProposalIsEmpty,
-
-        /// The size of the provided WASM code for the runtime upgrade proposal exceeded the limit
-        RuntimeProposalSizeExceeded,
-
-        /// Provided WASM code for the runtime upgrade proposal is empty
-        RuntimeProposalIsEmpty,
-    }
-}
-
 // Storage for the proposals codex module
 decl_storage! {
     pub trait Store for Module<T: Trait> as ProposalCodex{
@@ -74,7 +56,7 @@ decl_module! {
     /// 'Proposal codex' substrate module
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
         /// Predefined errors
-        type Error = Error;
+ //       type Error = Error;
 
         /// Create text (signal) proposal type. On approval prints its content.
         pub fn create_text_proposal(
@@ -94,16 +76,11 @@ decl_module! {
                 required_stake: Some(<BalanceOf<T>>::from(500u32))
             };
 
-            ensure!(!text.is_empty(), Error::TextProposalIsEmpty);
+            ensure!(!text.is_empty(), "TextProposalIsEmpty");
             ensure!(text.len() as u32 <=  Self::text_max_len(),
-                Error::TextProposalSizeExceeded);
+                "TextProposalSizeExceeded");
 
-            let text_proposal = TextProposalExecutable{
-                title: title.clone(),
-                body: body.clone(),
-                text,
-               };
-            let proposal_code = text_proposal.encode();
+            let proposal_code = <Call<T>>::text_proposal(title.clone(), body.clone(), text);
 
             <proposal_engine::Module<T>>::create_proposal(
                 origin,
@@ -111,50 +88,65 @@ decl_module! {
                 title,
                 body,
                 stake_balance,
-                text_proposal.proposal_type(),
-                proposal_code
+                proposal_code.encode()
             )?;
         }
 
-        /// Create runtime upgrade proposal type. On approval prints its content.
-        pub fn create_runtime_upgrade_proposal(
+        /// Text proposal extrinsic. Should be used as callable object to pass to the engine module
+        fn text_proposal(
             origin,
             title: Vec<u8>,
             body: Vec<u8>,
-            wasm: Vec<u8>,
-            stake_balance: Option<BalanceOf<T>>,
+            text: Vec<u8>,
         ) {
-            let parameters = crate::ProposalParameters {
-                voting_period: T::BlockNumber::from(50000u32),
-                grace_period: T::BlockNumber::from(10000u32),
-                approval_quorum_percentage: 80,
-                approval_threshold_percentage: 80,
-                slashing_quorum_percentage: 80,
-                slashing_threshold_percentage: 80,
-                required_stake: Some(<BalanceOf<T>>::from(50000u32))
-            };
-
-            ensure!(!wasm.is_empty(), Error::RuntimeProposalIsEmpty);
-            ensure!(wasm.len() as u32 <= Self::wasm_max_len(),
-                Error::RuntimeProposalSizeExceeded);
-
-            let proposal = RuntimeUpgradeProposalExecutable{
-                title: title.clone(),
-                body: body.clone(),
-                wasm,
-                marker : PhantomData::<T>
-               };
-            let proposal_code = proposal.encode();
-
-            <proposal_engine::Module<T>>::create_proposal(
-                origin,
-                parameters,
-                title,
-                body,
-                stake_balance,
-                proposal.proposal_type(),
-                proposal_code
-            )?;
+            ensure_root(origin)?;
+            print("Proposal: ");
+            print(from_utf8(title.as_slice()).unwrap());
+            print("Description:");
+            print(from_utf8(body.as_slice()).unwrap());
+            print("Text:");
+            print(from_utf8(text.as_slice()).unwrap());
         }
+
+        // /// Create runtime upgrade proposal type. On approval prints its content.
+        // pub fn create_runtime_upgrade_proposal(
+        //     origin,
+        //     title: Vec<u8>,
+        //     body: Vec<u8>,
+        //     wasm: Vec<u8>,
+        //     stake_balance: Option<BalanceOf<T>>,
+        // ) {
+        //     let parameters = crate::ProposalParameters {
+        //         voting_period: T::BlockNumber::from(50000u32),
+        //         grace_period: T::BlockNumber::from(10000u32),
+        //         approval_quorum_percentage: 80,
+        //         approval_threshold_percentage: 80,
+        //         slashing_quorum_percentage: 80,
+        //         slashing_threshold_percentage: 80,
+        //         required_stake: Some(<BalanceOf<T>>::from(50000u32))
+        //     };
+        //
+        //     ensure!(!wasm.is_empty(), Error::RuntimeProposalIsEmpty);
+        //     ensure!(wasm.len() as u32 <= Self::wasm_max_len(),
+        //         Error::RuntimeProposalSizeExceeded);
+        //
+        //     let proposal = RuntimeUpgradeProposalExecutable{
+        //         title: title.clone(),
+        //         body: body.clone(),
+        //         wasm,
+        //         marker : PhantomData::<T>
+        //        };
+        //     let proposal_code = proposal.encode();
+        //
+        //     <proposal_engine::Module<T>>::create_proposal(
+        //         origin,
+        //         parameters,
+        //         title,
+        //         body,
+        //         stake_balance,
+        //         proposal.proposal_type(),
+        //         proposal_code
+        //     )?;
+        // }
     }
 }

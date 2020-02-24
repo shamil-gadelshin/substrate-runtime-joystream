@@ -76,8 +76,6 @@ impl proposal_engine::Trait for Test {
 
     type TotalVotersCounter = MockVotersParameters;
 
-    type ProposalCodeDecoder = crate::ProposalType;
-
     type ProposalId = u32;
 
     type ProposerId = u64;
@@ -85,6 +83,14 @@ impl proposal_engine::Trait for Test {
     type VoterId = u64;
 
     type StakeHandlerProvider = proposal_engine::DefaultStakeHandlerProvider;
+
+    type ProposalCode = crate::Call<Test>;
+}
+
+impl Default for crate::Call<Test> {
+    fn default() -> Self {
+        panic!("shouldn't call default for Call");
+    }
 }
 
 pub struct MockVotersParameters;

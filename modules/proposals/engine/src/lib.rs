@@ -39,11 +39,14 @@ mod tests;
 
 use rstd::prelude::*;
 
-use runtime_primitives::traits::{EnsureOrigin, Zero};
+use codec::Decode;
+use rstd::str::from_utf8;
+use runtime_primitives::traits::{Dispatchable, EnsureOrigin, Zero};
 use srml_support::{
-    decl_event, decl_module, decl_storage, dispatch, ensure, Parameter, StorageDoubleMap,
+    decl_event, decl_module, decl_storage, dispatch, ensure, print, Parameter, StorageDoubleMap,
 };
 use system::ensure_root;
+use system::RawOrigin;
 
 // Max allowed proposal title length. Can be used if config value is not filled.
 const DEFAULT_TITLE_MAX_LEN: u32 = 100;
@@ -70,9 +73,6 @@ pub trait Trait: system::Trait + timestamp::Trait + stake::Trait {
     /// Provides data for voting. Defines maximum voters count for the proposal.
     type TotalVotersCounter: VotersParameters;
 
-    /// Converts proposal code binary to executable representation
-    type ProposalCodeDecoder: ProposalCodeDecoder<Self>;
-
     /// Proposal Id type
     type ProposalId: From<u32> + Parameter + Default + Copy;
 
@@ -84,6 +84,11 @@ pub trait Trait: system::Trait + timestamp::Trait + stake::Trait {
 
     /// Provides stake logic implementation. Can be used to mock stake logic.
     type StakeHandlerProvider: StakeHandlerProvider<Self>;
+
+    /// Proposals executable code. Can be instantiated by external module Call enum members.
+    type ProposalCode: Parameter
+        + Dispatchable<Origin = Self::Origin, Error = &'static str>
+        + Default;
 }
 
 decl_event!(
@@ -166,6 +171,22 @@ decl_module! {
 
         /// Emits an event. Default substrate implementation.
         fn deposit_event() = default;
+
+        /// Extrinsic for testing
+        fn text_proposal(
+            origin,
+            title: Vec<u8>,
+            body: Vec<u8>,
+            text: Vec<u8>,
+        ) {
+            ensure_root(origin)?;
+            print("Proposal: ");
+            print(from_utf8(title.as_slice()).unwrap());
+            print("Description:");
+            print(from_utf8(body.as_slice()).unwrap());
+            print("Text:");
+            print(from_utf8(text.as_slice()).unwrap());
+        }
 
         /// Vote extrinsic. Conditions:  origin must allow votes.
         pub fn vote(origin, proposal_id: T::ProposalId, vote: VoteKind)  {
@@ -256,7 +277,6 @@ impl<T: Trait> Module<T> {
         title: Vec<u8>,
         body: Vec<u8>,
         stake_balance: Option<types::BalanceOf<T>>,
-        proposal_type: u32,
         proposal_code: Vec<u8>,
     ) -> dispatch::Result {
         let account_id = T::ProposalOrigin::ensure_origin(origin)?;
@@ -289,7 +309,6 @@ impl<T: Trait> Module<T> {
             title,
             body,
             proposer_id: proposer_id.clone(),
-            proposal_type,
             status: ProposalStatus::Active,
             approved_at: None,
             voting_results: VotingResults::default(),
@@ -346,19 +365,14 @@ impl<T: Trait> Module<T> {
         let mut proposal = Self::proposals(proposal_id);
         let proposal_code = Self::proposal_codes(proposal_id);
 
-        let proposal_code_result =
-            T::ProposalCodeDecoder::decode_proposal(proposal.proposal_type, proposal_code);
+        let proposal_code_decoded = T::ProposalCode::decode(&mut &proposal_code[..]).unwrap();
 
-        let approved_proposal_status = match proposal_code_result {
-            Ok(proposal_code) => {
-                if let Err(error) = proposal_code.execute() {
-                    ApprovedProposalStatus::failed_execution(error)
-                } else {
-                    ApprovedProposalStatus::Executed
-                }
-            }
-            Err(error) => ApprovedProposalStatus::failed_execution(error),
-        };
+        let approved_proposal_status =
+            if let Err(error) = proposal_code_decoded.dispatch(T::Origin::from(RawOrigin::Root)) {
+                ApprovedProposalStatus::failed_execution(error)
+            } else {
+                ApprovedProposalStatus::Executed
+            };
 
         let proposal_execution_status = ProposalStatus::approved(approved_proposal_status);
 

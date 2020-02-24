@@ -90,8 +90,6 @@ impl crate::Trait for Test {
 
     type TotalVotersCounter = ();
 
-    type ProposalCodeDecoder = ProposalType;
-
     type ProposalId = u32;
 
     type ProposerId = u64;
@@ -99,6 +97,14 @@ impl crate::Trait for Test {
     type VoterId = u64;
 
     type StakeHandlerProvider = stakes::TestStakeHandlerProvider;
+
+    type ProposalCode = crate::Call<Test>;
+}
+
+impl Default for crate::Call<Test> {
+    fn default() -> Self {
+        panic!("shouldn't call default for Call");
+    }
 }
 
 // If changing count is required, we can upgrade the implementation as shown here:

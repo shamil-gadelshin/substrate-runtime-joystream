@@ -126,7 +126,6 @@ impl Alternative {
                             get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
                             get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
                         ],
-                        crate::proposals_config::development(),
                     )
                 },
                 Vec::new(),
@@ -160,7 +159,6 @@ impl Alternative {
                             get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
                             get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
                         ],
-                        crate::proposals_config::development(),
                     )
                 },
                 Vec::new(),
@@ -201,7 +199,6 @@ pub fn testnet_genesis(
     )>,
     root_key: AccountId,
     endowed_accounts: Vec<AccountId>,
-    cpcp: node_runtime::ProposalsConfigParameters,
 ) -> GenesisConfig {
     const CENTS: Balance = 1;
     const DOLLARS: Balance = 100 * CENTS;
@@ -209,6 +206,7 @@ pub fn testnet_genesis(
     const ENDOWMENT: Balance = 100_000 * DOLLARS;
 
     let default_text_constraint = node_runtime::working_group::default_text_constraint();
+    let cpcp: node_runtime::ProposalsConfigParameters = crate::proposals_config::development();
 
     GenesisConfig {
         system: Some(SystemConfig {

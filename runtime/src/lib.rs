@@ -16,9 +16,13 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 mod constants;
 mod integration;
 pub mod primitives;
+mod proposals_configuration;
 mod runtime_api;
 #[cfg(test)]
 mod tests; // Runtime integration tests
+
+#[macro_use]
+extern crate lazy_static; // for proposals_configuration module
 
 use frame_support::traits::{KeyOwnerProofSystem, LockIdentifier};
 use frame_support::weights::{
@@ -43,6 +47,7 @@ use system::EnsureRoot;
 
 pub use constants::*;
 pub use primitives::*;
+pub use proposals_configuration::*;
 pub use runtime_api::*;
 
 use integration::proposals::{CouncilManager, ExtrinsicProposalEncoder, MembershipOriginValidator};
@@ -52,6 +57,10 @@ use storage::data_object_storage_registry;
 
 // Node dependencies
 pub use common;
+pub use content_directory;
+pub use content_directory::{
+    HashedTextMaxLength, InputValidationLengthConstraint, MaxNumber, TextMaxLength, VecMaxLength,
+};
 pub use content_working_group as content_wg;
 pub use forum;
 pub use governance::election_params::ElectionParameters;
@@ -60,15 +69,11 @@ pub use membership;
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_staking::StakerStatus;
 pub use proposals_codex::ProposalsConfigParameters;
+pub use proposals_engine::ProposalParameters;
 pub use storage::{data_directory, data_object_type_registry};
 pub use versioned_store;
 pub use versioned_store_permissions;
 pub use working_group;
-
-pub use content_directory;
-pub use content_directory::{
-    HashedTextMaxLength, InputValidationLengthConstraint, MaxNumber, TextMaxLength, VecMaxLength,
-};
 
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
@@ -599,6 +604,7 @@ impl proposals_codex::Trait for Runtime {
     type TextProposalMaxLength = TextProposalMaxLength;
     type RuntimeUpgradeWasmProposalMaxLength = RuntimeUpgradeWasmProposalMaxLength;
     type ProposalEncoder = ExtrinsicProposalEncoder;
+    type SetValidatorCountProposalParameters = SetValidatorCountProposalParameters;
 }
 
 impl constitution::Trait for Runtime {

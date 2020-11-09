@@ -318,6 +318,9 @@ decl_module! {
         /// Predefined errors
         type Error = Error<T>;
 
+        /// Exports SetValidatorCount ProposalParameters
+        const SetValidatorCountProposalParameters: ProposalParameters<T::BlockNumber, BalanceOf<T>> = T::SetValidatorCountProposalParameters::get();
+
         /// Exports max allowed text proposal length const.
         const TextProposalMaxLength: u32 = T::TextProposalMaxLength::get();
 

@@ -5668,7 +5668,7 @@ dependencies = [
  "fnv",
  "futures 0.3.8",
  "hash-db",
- "hex-literal",
+ "hex-literal 0.2.1",
  "kvdb",
  "lazy_static",
  "log",
@@ -7597,6 +7597,7 @@ dependencies = [
 name = "substrate-referendum-module"
 version = "1.0.0"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "pallet-balances",
@@ -7607,6 +7608,7 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]

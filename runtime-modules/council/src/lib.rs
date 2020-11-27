@@ -64,14 +64,17 @@ use referendum::{CastVote, OptionResult, ReferendumManager};
 
 // declared modules
 mod mock;
-mod staking_handler;
+pub mod staking_handler;
 mod tests;
+
+mod benchmarking;
 
 use staking_handler::StakingHandler2;
 
 /////////////////// Data Structures ////////////////////////////////////////////
 
 /// Information about council's current state and when it changed the last time.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, PartialEq, Eq, Debug, Default)]
 pub struct CouncilStageUpdate<BlockNumber> {
     stage: CouncilStage,
@@ -79,6 +82,7 @@ pub struct CouncilStageUpdate<BlockNumber> {
 }
 
 /// Possible council states.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, PartialEq, Eq, Debug)]
 pub enum CouncilStage {
     /// Candidacy announcement period.
@@ -98,12 +102,14 @@ impl Default for CouncilStage {
 }
 
 /// Representation for announcing candidacy stage state.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, PartialEq, Eq, Debug, Default)]
 pub struct CouncilStageAnnouncing {
     candidates_count: u64,
 }
 
 /// Representation for new council members election stage state.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, PartialEq, Eq, Debug, Default)]
 pub struct CouncilStageElection {
     candidates_count: u64,

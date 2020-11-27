@@ -3870,6 +3870,7 @@ dependencies = [
 name = "pallet-council"
 version = "1.0.0"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "pallet-balances",
@@ -3883,6 +3884,7 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-runtime",
+ "sp-std",
  "substrate-referendum-module",
 ]
 

@@ -285,6 +285,12 @@ pub fn testnet_genesis(
             active_council: vec![],
             term_ends_at: 1,
         }),
+        new_council: Some(NewCouncilConfig {
+            announcement_period_nr: 0,
+            candidates: vec![],
+            council_members: vec![],
+            stage: Default::default(),
+        }),
         election: Some(CouncilElectionConfig {
             auto_start: true,
             election_parameters: ElectionParameters {

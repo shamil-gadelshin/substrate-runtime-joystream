@@ -46,7 +46,9 @@ use frame_support::{
 use frame_system::ensure_signed;
 use sp_arithmetic::traits::BaseArithmetic;
 use sp_runtime::traits::{MaybeSerialize, Member};
-use std::marker::PhantomData;
+use sp_std::marker::PhantomData;
+use sp_std::vec;
+use sp_std::vec::Vec;
 
 // declared modules
 mod benchmarking;

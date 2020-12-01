@@ -58,7 +58,8 @@ use frame_system::{ensure_root, ensure_signed};
 use serde::{Deserialize, Serialize};
 use sp_arithmetic::traits::BaseArithmetic;
 use sp_runtime::traits::{Hash, MaybeSerialize, Member, SaturatedConversion, Saturating};
-use std::marker::PhantomData;
+use sp_std::marker::PhantomData;
+use sp_std::vec::Vec;
 
 use referendum::{CastVote, OptionResult, ReferendumManager};
 

@@ -33,9 +33,9 @@ use node_runtime::{
     ContentDirectoryConfig, ContentDirectoryWorkingGroupConfig, ContentWorkingGroupConfig,
     CouncilConfig, CouncilElectionConfig, DataDirectoryConfig, DataObjectStorageRegistryConfig,
     DataObjectTypeRegistryConfig, ElectionParameters, ForumConfig, ForumWorkingGroupConfig,
-    GrandpaConfig, ImOnlineConfig, MembersConfig, Moment, SessionConfig, SessionKeys, Signature,
-    StakerStatus, StakingConfig, StorageWorkingGroupConfig, SudoConfig, SystemConfig,
-    VersionedStoreConfig, VersionedStorePermissionsConfig, DAYS,
+    GrandpaConfig, ImOnlineConfig, MembersConfig, Moment, NewCouncilConfig, ReferendumConfig,
+    SessionConfig, SessionKeys, Signature, StakerStatus, StakingConfig, StorageWorkingGroupConfig,
+    SudoConfig, SystemConfig, VersionedStoreConfig, VersionedStorePermissionsConfig, DAYS,
 };
 
 // Exported to be used by chain-spec-builder
@@ -346,6 +346,11 @@ pub fn testnet_genesis(
                 next_entity_id: 1,
                 next_curator_group_id: 1,
             }
+        }),
+        referendum_Instance1: Some(ReferendumConfig {
+            current_cycle_id: 0,
+            stage: Default::default(),
+            votes: vec![],
         }),
         versioned_store: Some(versioned_store_config),
         versioned_store_permissions: Some(versioned_store_permissions_config),

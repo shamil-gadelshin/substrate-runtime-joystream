@@ -3,6 +3,7 @@
 pub use crate::{GenesisConfig, Trait};
 
 pub use frame_support::traits::{Currency, LockIdentifier};
+use frame_support::weights::Weight;
 use frame_support::{impl_outer_origin, parameter_types};
 pub use frame_system;
 use sp_core::H256;
@@ -89,6 +90,7 @@ parameter_types! {
     pub const LockId: LockIdentifier = [9; 8];
 }
 
+pub struct WorkingGroupWeightInfo;
 impl working_group::Trait<crate::MembershipWorkingGroupInstance> for Test {
     type Event = ();
     type MaxWorkerNumberLimit = MaxWorkerNumberLimit;
@@ -96,6 +98,79 @@ impl working_group::Trait<crate::MembershipWorkingGroupInstance> for Test {
     type MemberOriginValidator = ();
     type MinUnstakingPeriodLimit = ();
     type RewardPeriod = ();
+    type WeightInfo = WorkingGroupWeightInfo;
+}
+
+impl working_group::WeightInfo for WorkingGroupWeightInfo {
+    fn on_initialize_leaving(_: u32) -> Weight {
+        0
+    }
+    fn on_initialize_rewarding_with_missing_reward(_: u32) -> Weight {
+        0
+    }
+    fn on_initialize_rewarding_with_missing_reward_cant_pay(_: u32) -> Weight {
+        0
+    }
+    fn on_initialize_rewarding_without_missing_reward(_: u32) -> Weight {
+        0
+    }
+    fn apply_on_opening(_: u32) -> Weight {
+        0
+    }
+    fn fill_opening_lead() -> Weight {
+        0
+    }
+    fn fill_opening_worker(_: u32) -> Weight {
+        0
+    }
+    fn update_role_account() -> Weight {
+        0
+    }
+    fn cancel_opening() -> Weight {
+        0
+    }
+    fn withdraw_application() -> Weight {
+        0
+    }
+    fn slash_stake(_: u32) -> Weight {
+        0
+    }
+    fn terminate_role_worker(_: u32) -> Weight {
+        0
+    }
+    fn terminate_role_lead(_: u32) -> Weight {
+        0
+    }
+    fn increase_stake() -> Weight {
+        0
+    }
+    fn decrease_stake() -> Weight {
+        0
+    }
+    fn spend_from_budget() -> Weight {
+        0
+    }
+    fn update_reward_amount() -> Weight {
+        0
+    }
+    fn set_status_text(_: u32) -> Weight {
+        0
+    }
+    fn update_reward_account() -> Weight {
+        0
+    }
+    fn set_budget() -> Weight {
+        0
+    }
+    fn add_opening(_: u32) -> Weight {
+        0
+    }
+    fn leave_role_immediatly() -> Weight {
+        0
+    }
+    fn leave_role_later() -> Weight {
+        0
+    }
 }
 
 impl common::origin::ActorOriginValidator<Origin, u64, u64> for () {

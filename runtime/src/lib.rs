@@ -663,6 +663,7 @@ impl working_group::Trait<MembershipWorkingGroupInstance> for Runtime {
     type MemberOriginValidator = MembershipOriginValidator<Self>;
     type MinUnstakingPeriodLimit = MinUnstakingPeriodLimit;
     type RewardPeriod = MembershipRewardPeriod;
+    type WeightInfo = weights::working_group::WeightInfo;
 }
 
 impl service_discovery::Trait for Runtime {

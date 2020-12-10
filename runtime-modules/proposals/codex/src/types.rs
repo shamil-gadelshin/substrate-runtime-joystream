@@ -21,12 +21,14 @@ pub type ProposalDetailsOf<T> = ProposalDetails<
     <T as frame_system::Trait>::AccountId,
     crate::BalanceOf<T>,
     working_group::WorkerId<T>,
+    working_group::OpeningId<T>,
+    crate::BalanceOf<T>,
 >;
 
 /// Proposal details provide voters the information required for the perceived voting.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Clone, PartialEq, Debug)]
-pub enum ProposalDetails<BlockNumber, AccountId, Balance, WorkerId> {
+pub enum ProposalDetails<Balance, BlockNumber, AccountId, WorkerId, OpeningId> {
     /// The text of the `text` proposal
     Text(Vec<u8>),
 
@@ -62,6 +64,12 @@ pub enum ProposalDetails<BlockNumber, AccountId, Balance, WorkerId> {
 
     /// Amend constitution.
     AmendConstitution(Vec<u8>),
+
+    /// Cancel working group leader opening.
+    CancelWorkingGroupLeaderOpening(OpeningId, WorkingGroup),
+
+    /// Set the membership price.
+    SetMembershipPrice(Balance),
 }
 
 impl<BlockNumber, AccountId, Balance, WorkerId> Default
@@ -100,7 +108,7 @@ pub struct TerminateRoleParameters<WorkerId, Balance> {
     pub worker_id: WorkerId,
 
     /// Terminate role slash penalty.
-    pub penalty: Option<Penalty<Balance>>,
+    pub penalty: Option<Penalty<Balance>>, //TODO: in the handbook there is no rationale
 
     /// Defines working group with the open position.
     pub working_group: WorkingGroup,

@@ -158,6 +158,10 @@ pub trait Trait:
     type AmendConstitutionProposalParameters: Get<
         ProposalParameters<Self::BlockNumber, BalanceOf<Self>>,
     >;
+
+    type CancelWorkingGroupLeaderOpeningParameters: Get<
+        ProposalParameters<Self::BlockNumber, BalanceOf<Self>>,
+    >;
 }
 
 /// Specialized alias of GeneralProposalParams
@@ -392,6 +396,19 @@ impl<T: Trait> Module<T> {
                     *balance <= <BalanceOf<T>>::from(MAX_SPENDING_PROPOSAL_VALUE),
                     Error::<T>::InvalidSpendingProposalBalance
                 );
+
+                let mint_id = governance::council::Module::<T>::council_mint();
+                let budget = minting::Module::<T>::get_mint_capacity(mint_id);
+
+                match budget {
+                    Result::Ok(budget) => {
+                        ensure!(
+                            *balance <= budget,
+                            Error::<T>::InvalidSpendingProposalBalance
+                        );
+                    }
+                    _ => return Err(Error::<T>::InvalidSpendingProposalBalance.into()),
+                }
             }
             ProposalDetails::SetValidatorCount(ref new_validator_count) => {
                 ensure!(
@@ -437,6 +454,9 @@ impl<T: Trait> Module<T> {
             ProposalDetails::AmendConstitution(..) => {
                 // Note: No checks for this proposal for now
             }
+            ProposalDetails::CancelWorkingGroupLeaderOpening(_, _) => {
+                // Note: No checks for this proposal for now
+            }
         }
 
         Ok(())
@@ -478,6 +498,9 @@ impl<T: Trait> Module<T> {
             }
             ProposalDetailsOf::<T>::AmendConstitution(..) => {
                 T::AmendConstitutionProposalParameters::get()
+            }
+            ProposalDetails::CancelWorkingGroupLeaderOpening(_, _) => {
+                T::CancelWorkingGroupLeaderOpeningParameters::get()
             }
         }
     }

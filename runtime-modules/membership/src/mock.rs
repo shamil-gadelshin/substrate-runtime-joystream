@@ -13,6 +13,8 @@ use sp_runtime::{
     Perbill,
 };
 
+type MembershipWorkingGroupInstance = working_group::Instance4;
+
 pub use common::currency::GovernanceCurrency;
 
 impl_outer_origin! {
@@ -91,7 +93,7 @@ parameter_types! {
 }
 
 pub struct WorkingGroupWeightInfo;
-impl working_group::Trait<crate::MembershipWorkingGroupInstance> for Test {
+impl working_group::Trait<MembershipWorkingGroupInstance> for Test {
     type Event = ();
     type MaxWorkerNumberLimit = MaxWorkerNumberLimit;
     type StakingHandler = staking_handler::StakingManager<Self, LockId>;

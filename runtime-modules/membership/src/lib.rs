@@ -13,9 +13,6 @@ use sp_arithmetic::traits::One;
 use sp_std::borrow::ToOwned;
 use sp_std::vec::Vec;
 
-// The membership working group instance alias.
-pub type MembershipWorkingGroupInstance = working_group::Instance4;
-
 // Balance type alias
 type BalanceOf<T> = <T as balances::Trait>::Balance;
 

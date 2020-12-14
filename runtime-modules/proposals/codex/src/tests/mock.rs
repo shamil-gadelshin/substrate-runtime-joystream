@@ -472,6 +472,9 @@ impl crate::Trait for Test {
     type AmendConstitutionProposalParameters = DefaultProposalParameters;
     type CancelWorkingGroupLeadOpeningProposalParameters = DefaultProposalParameters;
     type SetMembershipPriceProposalParameters = DefaultProposalParameters;
+    type SetCouncilBudgetIncrementProposalParameters = DefaultProposalParameters;
+    type SetCouncilorRewardProposalParameters = DefaultProposalParameters;
+    type SetInitialInvitationBalanceProposalParameters = DefaultProposalParameters;
 }
 
 parameter_types! {

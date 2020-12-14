@@ -5,7 +5,7 @@ use super::*;
 
 use common::working_group::WorkingGroup;
 use frame_system::RawOrigin;
-use proposals_codex::AddOpeningParameters;
+use proposals_codex::CreateOpeningParameters;
 use strum::IntoEnumIterator;
 use working_group::{Penalty, StakeParameters};
 
@@ -26,11 +26,11 @@ fn add_opening(
     account_id: [u8; 32],
     stake_policy: Option<working_group::StakePolicy<BlockNumber, Balance>>,
     sequence_number: u32, // action sequence number to align with other actions
-    working_group: WorkingGroup,
+    group: WorkingGroup,
 ) -> u64 {
     let expected_proposal_id = sequence_number;
 
-    let opening_id = match working_group {
+    let opening_id = match group {
         WorkingGroup::Content => {
             let opening_id = ContentDirectoryWorkingGroup::next_opening_id();
             assert!(!<working_group::OpeningById<
@@ -77,11 +77,11 @@ fn add_opening(
         ProposalCodex::create_proposal(
             RawOrigin::Signed(account_id.into()).into(),
             general_proposal_parameters,
-            ProposalDetails::AddWorkingGroupLeaderOpening(AddOpeningParameters {
+            ProposalDetails::CreateWorkingGroupLeadOpening(CreateOpeningParameters {
                 description: Vec::new(),
                 stake_policy: stake_policy.clone(),
                 reward_per_block: None,
-                working_group,
+                group,
             }),
         )
     })
@@ -114,7 +114,7 @@ fn fill_opening(
     member_id: MemberId,
     account_id: [u8; 32],
     opening_id: u64,
-    successful_application_id: u64,
+    application_id: u64,
     sequence_number: u32, // action sequence number to align with other actions
     working_group: WorkingGroup,
 ) {
@@ -132,13 +132,11 @@ fn fill_opening(
         ProposalCodex::create_proposal(
             RawOrigin::Signed(account_id.into()).into(),
             general_proposal_parameters,
-            ProposalDetails::FillWorkingGroupLeaderOpening(
-                proposals_codex::FillOpeningParameters {
-                    opening_id,
-                    successful_application_id,
-                    working_group,
-                },
-            ),
+            ProposalDetails::FillWorkingGroupLeadOpening(proposals_codex::FillOpeningParameters {
+                opening_id,
+                application_id,
+                working_group,
+            }),
         )
     })
     .disable_setup_enviroment()
@@ -169,7 +167,7 @@ fn decrease_stake(
         ProposalCodex::create_proposal(
             RawOrigin::Signed(account_id.into()).into(),
             general_proposal_parameters,
-            ProposalDetails::DecreaseWorkingGroupLeaderStake(
+            ProposalDetails::DecreaseWorkingGroupLeadStake(
                 leader_worker_id,
                 stake_amount,
                 working_group,
@@ -204,7 +202,7 @@ fn slash_stake(
         ProposalCodex::create_proposal(
             RawOrigin::Signed(account_id.into()).into(),
             general_proposal_parameters,
-            ProposalDetails::SlashWorkingGroupLeaderStake(
+            ProposalDetails::SlashWorkingGroupLead(
                 leader_worker_id,
                 Penalty {
                     slashing_amount: stake_amount,
@@ -242,7 +240,7 @@ fn set_reward(
         ProposalCodex::create_proposal(
             RawOrigin::Signed(account_id.into()).into(),
             general_proposal_parameters,
-            ProposalDetails::SetWorkingGroupLeaderReward(
+            ProposalDetails::SetWorkingGroupLeadReward(
                 leader_worker_id,
                 Some(reward_amount),
                 working_group,
@@ -280,7 +278,11 @@ fn set_mint_capacity<
         ProposalCodex::create_proposal(
             RawOrigin::Signed(account_id.into()).into(),
             general_proposal_parameters,
-            ProposalDetails::SetWorkingGroupBudgetCapacity(mint_capacity, working_group),
+            ProposalDetails::UpdateWorkingGroupBudget(
+                mint_capacity,
+                working_group,
+                proposals_codex::BalanceKind::Positive,
+            ),
         )
     })
     .with_setup_enviroment(setup_environment)
@@ -293,9 +295,9 @@ fn terminate_role(
     member_id: MemberId,
     account_id: [u8; 32],
     leader_worker_id: u64,
-    penalty: Option<Penalty<Balance>>,
+    slashing_amount: Option<Balance>,
     sequence_number: u32, // action sequence number to align with other actions
-    working_group: WorkingGroup,
+    group: WorkingGroup,
 ) {
     let expected_proposal_id = sequence_number;
 
@@ -311,13 +313,11 @@ fn terminate_role(
         ProposalCodex::create_proposal(
             RawOrigin::Signed(account_id.into()).into(),
             general_proposal_parameters,
-            ProposalDetails::TerminateWorkingGroupLeaderRole(
-                proposals_codex::TerminateRoleParameters {
-                    worker_id: leader_worker_id,
-                    penalty: penalty.clone(),
-                    working_group,
-                },
-            ),
+            ProposalDetails::TerminateWorkingGroupLead(proposals_codex::TerminateRoleParameters {
+                worker_id: leader_worker_id,
+                slashing_amount: slashing_amount.clone(),
+                group,
+            }),
         )
     })
     .disable_setup_enviroment()
@@ -1161,10 +1161,7 @@ fn run_create_terminate_group_leader_role_proposal_with_slashing_execution_succe
             member_id,
             account_id,
             leader_worker_id.into(),
-            Some(Penalty {
-                slashing_amount: stake_amount.into(),
-                slashing_text: Vec::new(),
-            }),
+            stake_amount.into(),
             4,
             working_group,
         );

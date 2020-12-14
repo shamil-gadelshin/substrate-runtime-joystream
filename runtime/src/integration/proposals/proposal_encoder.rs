@@ -1,7 +1,7 @@
 use crate::{Call, Runtime};
 use common::working_group::WorkingGroup;
 use proposals_codex::{ProposalDetails, ProposalDetailsOf, ProposalEncoder};
-use working_group::OpeningType;
+use working_group::{OpeningType, Penalty};
 
 use codec::Encode;
 use sp_std::collections::btree_set::BTreeSet;
@@ -75,9 +75,14 @@ impl ProposalEncoder<Runtime> for ExtrinsicProposalEncoder {
                 Wg::create_decrease_stake_call(worker_id, decreasing_stake)
             ),
             ProposalDetails::SlashWorkingGroupLead(worker_id, slashing_stake, working_group) => {
+                let slashing_stake = Penalty {
+                    slashing_text: Vec::new(),
+                    slashing_amount: slashing_stake,
+                };
+
                 wrap_working_group_call!(
                     working_group,
-                    Wg::create_slash_stake_call(worker_id, slashing_stake,)
+                    Wg::create_slash_stake_call(worker_id, slashing_stake)
                 )
             }
             ProposalDetails::SetWorkingGroupLeadReward(worker_id, reward_amount, working_group) => {
@@ -183,7 +188,7 @@ where
     ) -> working_group::Call<T, I> {
         let penalty = if let Some(slashing_amount) = terminate_role_params.slashing_amount {
             Some(working_group::Penalty {
-                slashing_amount: slashing_amount,
+                slashing_amount,
                 slashing_text: Vec::new(),
             })
         } else {

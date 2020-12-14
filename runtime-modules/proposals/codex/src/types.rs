@@ -7,7 +7,7 @@ use sp_std::vec::Vec;
 
 use common::working_group::WorkingGroup;
 
-use working_group::{Penalty, StakePolicy};
+use working_group::StakePolicy;
 
 /// Encodes proposal using its details information.
 pub trait ProposalEncoder<T: crate::Trait> {

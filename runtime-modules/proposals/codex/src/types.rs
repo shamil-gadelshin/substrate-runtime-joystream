@@ -65,7 +65,7 @@ pub enum ProposalDetails<Balance, BlockNumber, AccountId, WorkerId, OpeningId> {
     DecreaseWorkingGroupLeadStake(WorkerId, Balance, WorkingGroup),
 
     /// `Slash Working Group Lead Stake` proposal:  Slash the working group leader stake.
-    SlashWorkingGroupLead(WorkerId, Penalty<Balance>, WorkingGroup),
+    SlashWorkingGroupLead(WorkerId, Balance, WorkingGroup),
 
     /// `Set Working Group Lead Reward` proposal: Set working group lead reward balance.
     SetWorkingGroupLeadReward(WorkerId, Option<Balance>, WorkingGroup),

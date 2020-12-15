@@ -9,7 +9,6 @@ use frame_system::RawOrigin;
 use common::working_group::WorkingGroup;
 use proposals_engine::ProposalParameters;
 use referendum::ReferendumManager;
-use working_group::Penalty;
 
 use crate::*;
 use crate::{Error, ProposalDetails};
@@ -42,7 +41,7 @@ where
     empty_stake_call: EmptyStakeCall,
     successful_call: SuccessfulCall,
     proposal_parameters: ProposalParameters<u64, u64>,
-    proposal_details: ProposalDetails<u64, u64, u64, u64, u64, u64, u64, u64, u64>,
+    proposal_details: ProposalDetails<u64, u64, u64, u64, u64>,
 }
 
 impl<InsufficientRightsCall, EmptyStakeCall, SuccessfulCall>
@@ -246,8 +245,8 @@ fn create_funding_request_proposal_common_checks_succeed() {
     initial_test_ext().execute_with(|| {
         let total_balance_issuance = 500000;
         increase_total_balance_issuance(total_balance_issuance);
-        let mint_id = governance::council::Module::<Test>::council_mint();
-        minting::Module::<Test>::set_mint_capacity(mint_id, total_balance_issuance).unwrap();
+        council::Module::<Test>::set_budget(RawOrigin::Root.into(), total_balance_issuance)
+            .unwrap();
 
         let general_proposal_parameters_no_staking = GeneralProposalParameters::<Test> {
             member_id: 1,
@@ -267,10 +266,7 @@ fn create_funding_request_proposal_common_checks_succeed() {
 
         let funding_request_proposal_details = ProposalDetails::FundingRequest(20, 10);
         let funding_request_details_succesful = ProposalDetails::FundingRequest(100, 2);
-        assert_eq!(
-            minting::Module::<Test>::mints(mint_id).capacity(),
-            total_balance_issuance
-        );
+        assert_eq!(council::Module::<Test>::budget(), total_balance_issuance);
 
         let proposal_fixture = ProposalTestFixture {
             insufficient_rights_call: || {
@@ -314,24 +310,14 @@ fn create_funding_request_proposal_call_fails_with_incorrect_balance() {
             exact_execution_block: None,
         };
 
-        let mint_id = governance::council::Module::<Test>::council_mint();
-        let mint_capacity = 100;
-        minting::Module::<Test>::set_mint_capacity(mint_id, mint_capacity).unwrap();
+        let budget_capacity = 100;
+        council::Module::<Test>::set_budget(RawOrigin::Root.into(), budget_capacity).unwrap();
 
         assert_eq!(
             ProposalCodex::create_proposal(
                 RawOrigin::Signed(1).into(),
                 general_proposal_parameters.clone(),
                 ProposalDetails::FundingRequest(0, 2),
-            ),
-            Err(Error::<Test>::InvalidFundingRequestProposalBalance.into())
-        );
-
-        assert_eq!(
-            ProposalCodex::create_proposal(
-                RawOrigin::Signed(1).into(),
-                general_proposal_parameters.clone(),
-                ProposalDetails::FundingRequest(mint_capacity + 1, 2),
             ),
             Err(Error::<Test>::InvalidFundingRequestProposalBalance.into())
         );
@@ -769,14 +755,6 @@ fn run_create_slash_working_group_leader_stake_proposal_common_checks_succeed(
     });
 }
 
-#[test]
-fn slash_stake_with_zero_staking_balance_fails() {
-    // This uses strum crate for enum iteration
-    for group in WorkingGroup::iter() {
-        run_slash_stake_with_zero_staking_balance_fails(group);
-    }
-}
-
 pub fn run_to_block(n: u64) {
     while System::block_number() < n {
         System::on_finalize(System::block_number());
@@ -857,38 +835,6 @@ fn setup_council(start_id: u64) {
             .collect::<Vec<_>>(),
         council,
     );
-}
-
-fn run_slash_stake_with_zero_staking_balance_fails(working_group: WorkingGroup) {
-    initial_test_ext().execute_with(|| {
-        increase_total_balance_issuance_using_account_id(1, 500000);
-
-        let general_proposal_parameters = GeneralProposalParameters::<Test> {
-            member_id: 1,
-            title: b"title".to_vec(),
-            description: b"body".to_vec(),
-            staking_account_id: Some(1),
-            exact_execution_block: None,
-        };
-
-        setup_council(2);
-
-        assert_eq!(
-            ProposalCodex::create_proposal(
-                RawOrigin::Signed(1).into(),
-                general_proposal_parameters.clone(),
-                ProposalDetails::SlashWorkingGroupLeaderStake(
-                    10,
-                    Penalty {
-                        slashing_amount: 0,
-                        slashing_text: Vec::new()
-                    },
-                    working_group,
-                )
-            ),
-            Err(Error::<Test>::SlashingStakeIsZero.into())
-        );
-    });
 }
 
 #[test]

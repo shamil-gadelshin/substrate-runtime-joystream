@@ -89,7 +89,7 @@ fn add_opening(
 
     codex_extrinsic_test_fixture.call_extrinsic_and_assert();
 
-    match working_group {
+    match group {
         WorkingGroup::Content => assert!(working_group::OpeningById::<
             Runtime,
             ContentDirectoryWorkingGroupInstance,

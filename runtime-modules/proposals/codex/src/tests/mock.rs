@@ -362,6 +362,7 @@ impl working_group::Trait<ForumWorkingGroupInstance> for Test {
     type MinUnstakingPeriodLimit = ();
     type RewardPeriod = ();
     type WeightInfo = WorkingGroupWeightInfo;
+    type StakingAccountValidator = membership::Module<Test>;
 }
 
 impl working_group::Trait<MembershipWorkingGroupInstance> for Test {
@@ -372,6 +373,7 @@ impl working_group::Trait<MembershipWorkingGroupInstance> for Test {
     type MinUnstakingPeriodLimit = ();
     type RewardPeriod = ();
     type WeightInfo = WorkingGroupWeightInfo;
+    type StakingAccountValidator = membership::Module<Test>;
 }
 
 pallet_staking_reward_curve::build! {
@@ -458,6 +460,7 @@ pub(crate) fn default_proposal_parameters() -> ProposalParameters<u64, u64> {
 impl crate::Trait for Test {
     type MembershipOriginValidator = ();
     type ProposalEncoder = ();
+    type WeightInfo = ();
     type SetMaxValidatorCountProposalParameters = DefaultProposalParameters;
     type RuntimeUpgradeProposalParameters = DefaultProposalParameters;
     type SignalProposalParameters = DefaultProposalParameters;
@@ -665,6 +668,63 @@ impl referendum::WeightInfo for ReferendumWeightInfo {
     }
 }
 
+impl crate::WeightInfo for () {
+    fn execute_signal_proposal(_: u32) -> Weight {
+        0
+    }
+    fn create_proposal_signal(_: u32) -> Weight {
+        0
+    }
+    fn create_proposal_runtime_upgrade(_: u32, _: u32, _: u32) -> Weight {
+        0
+    }
+    fn create_proposal_funding_request() -> Weight {
+        0
+    }
+    fn create_proposal_set_max_validator_count(_: u32, _: u32) -> Weight {
+        0
+    }
+    fn create_proposal_create_working_group_lead_opening(_: u32, _: u32, _: u32) -> Weight {
+        0
+    }
+    fn create_proposal_fill_working_group_lead_opening(_: u32, _: u32) -> Weight {
+        0
+    }
+    fn create_proposal_update_working_group_budget(_: u32) -> Weight {
+        0
+    }
+    fn create_proposal_decrease_working_group_lead_stake() -> Weight {
+        0
+    }
+    fn create_proposal_slash_working_group_lead(_: u32) -> Weight {
+        0
+    }
+    fn create_proposal_set_working_group_lead_reward(_: u32) -> Weight {
+        0
+    }
+    fn create_proposal_terminate_working_group_lead(_: u32, _: u32) -> Weight {
+        0
+    }
+    fn create_proposal_amend_constitution(_: u32, _: u32, _: u32) -> Weight {
+        0
+    }
+    fn create_proposal_cancel_working_group_lead_opening(_: u32) -> Weight {
+        0
+    }
+    fn create_proposal_set_membership_price(_: u32, _: u32) -> Weight {
+        0
+    }
+    fn create_proposal_set_council_budget_increment(_: u32) -> Weight {
+        0
+    }
+    fn create_proposal_set_councilor_reward(_: u32) -> Weight {
+        0
+    }
+    fn create_proposal_set_initial_invitation_balance(_: u32, _: u32) -> Weight {
+        0
+    }
+}
+
 impl ProposalEncoder<Test> for () {
     fn encode_proposal(_proposal_details: ProposalDetailsOf<Test>) -> Vec<u8> {
         Vec::new()
@@ -721,7 +781,7 @@ pub fn initial_test_ext() -> sp_io::TestExternalities {
         .unwrap();
 
     // build the council config to initialize the mint
-    let council_config = governance::council::GenesisConfig::<Test>::default()
+    let council_config = council::GenesisConfig::<Test>::default()
         .build_storage()
         .unwrap();
 

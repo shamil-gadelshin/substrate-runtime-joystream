@@ -358,22 +358,22 @@ impl working_group::Trait<ForumWorkingGroupInstance> for Test {
     type Event = ();
     type MaxWorkerNumberLimit = MaxWorkerNumberLimit;
     type StakingHandler = staking_handler::StakingManager<Self, LockId2>;
+    type StakingAccountValidator = membership::Module<Test>;
     type MemberOriginValidator = ();
     type MinUnstakingPeriodLimit = ();
     type RewardPeriod = ();
     type WeightInfo = WorkingGroupWeightInfo;
-    type StakingAccountValidator = membership::Module<Test>;
 }
 
 impl working_group::Trait<MembershipWorkingGroupInstance> for Test {
     type Event = ();
     type MaxWorkerNumberLimit = MaxWorkerNumberLimit;
     type StakingHandler = staking_handler::StakingManager<Self, LockId2>;
+    type StakingAccountValidator = membership::Module<Test>;
     type MemberOriginValidator = ();
     type MinUnstakingPeriodLimit = ();
     type RewardPeriod = ();
     type WeightInfo = WorkingGroupWeightInfo;
-    type StakingAccountValidator = membership::Module<Test>;
 }
 
 pallet_staking_reward_curve::build! {

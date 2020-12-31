@@ -170,12 +170,7 @@ impl<AccountId, MemberId, Balance, Hash, VotePower, BlockNumber>
 
 /////////////////// Type aliases ///////////////////////////////////////////////
 
-pub type Balance<T> = <<<T as Trait>::Referendum as ReferendumManager<
-    <T as frame_system::Trait>::Origin,
-    <T as frame_system::Trait>::AccountId,
-    <T as common::Trait>::MemberId,
-    <T as frame_system::Trait>::Hash,
->>::Currency as Currency<<T as frame_system::Trait>::AccountId>>::Balance;
+pub type Balance<T> = <T as balances::Trait>::Balance;
 pub type VotePowerOf<T> = <<T as Trait>::Referendum as ReferendumManager<
     <T as frame_system::Trait>::Origin,
     <T as frame_system::Trait>::AccountId,
@@ -216,8 +211,10 @@ pub trait WeightInfo {
     fn plan_budget_refill() -> Weight;
 }
 
+type CouncilWeightInfo<T> = <T as Trait>::WeightInfo;
+
 /// The main council trait.
-pub trait Trait: frame_system::Trait + common::Trait {
+pub trait Trait: frame_system::Trait + common::Trait + balances::Trait {
     /// The overarching event type.
     type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
 
@@ -491,7 +488,7 @@ decl_module! {
         /// - db:
         ///    - `O(1)` doesn't depend on the state or parameters
         /// # </weight>
-        #[weight = T::WeightInfo::announce_candidacy()]
+        #[weight = CouncilWeightInfo::<T>::announce_candidacy()]
         pub fn announce_candidacy(
                 origin,
                 membership_id: T::MemberId,
@@ -537,7 +534,7 @@ decl_module! {
         /// - db:
         ///    - `O(1)` doesn't depend on the state or parameters
         /// # </weight>
-        #[weight = T::WeightInfo::release_candidacy_stake()]
+        #[weight = CouncilWeightInfo::<T>::release_candidacy_stake()]
         pub fn release_candidacy_stake(origin, membership_id: T::MemberId)
             -> Result<(), Error<T>> {
             let staking_account_id =
@@ -565,7 +562,7 @@ decl_module! {
         /// - db:
         ///    - `O(1)` doesn't depend on the state or parameters
         /// # </weight>
-        #[weight = T::WeightInfo::withdraw_candidacy()]
+        #[weight = CouncilWeightInfo::<T>::withdraw_candidacy()]
         pub fn withdraw_candidacy(origin, membership_id: T::MemberId) -> Result<(), Error<T>> {
             let staking_account_id =
                 EnsureChecks::<T>::can_withdraw_candidacy(origin, &membership_id)?;
@@ -593,7 +590,7 @@ decl_module! {
         /// - db:
         ///    - `O(1)` doesn't depend on the state or parameters
         /// # </weight>
-        #[weight = T::WeightInfo::set_candidacy_note(note.len().saturated_into())]
+        #[weight = CouncilWeightInfo::<T>::set_candidacy_note(note.len().saturated_into())]
         pub fn set_candidacy_note(origin, membership_id: T::MemberId, note: Vec<u8>)
             -> Result<(), Error<T>> {
             // ensure action can be started
@@ -624,7 +621,7 @@ decl_module! {
         /// - db:
         ///    - `O(1)` doesn't depend on the state or parameters
         /// # </weight>
-        #[weight = T::WeightInfo::set_budget()]
+        #[weight = CouncilWeightInfo::<T>::set_budget()]
         pub fn set_budget(origin, balance: Balance<T>) -> Result<(), Error<T>> {
             // ensure action can be started
             EnsureChecks::<T>::can_set_budget(origin)?;
@@ -651,7 +648,7 @@ decl_module! {
         /// - db:
         ///    - `O(1)` doesn't depend on the state or parameters
         /// # </weight>
-        #[weight = T::WeightInfo::plan_budget_refill()]
+        #[weight = CouncilWeightInfo::<T>::plan_budget_refill()]
         pub fn plan_budget_refill(origin, next_refill: T::BlockNumber) -> Result<(), Error<T>> {
             // ensure action can be started
             EnsureChecks::<T>::can_plan_budget_refill(origin)?;
@@ -1190,14 +1187,7 @@ impl<T: Trait> Mutations<T> {
         now: &T::BlockNumber,
     ) {
         // mint tokens into reward account
-        <<<T as Trait>::Referendum as ReferendumManager<
-            <T as frame_system::Trait>::Origin,
-            <T as frame_system::Trait>::AccountId,
-            <T as common::Trait>::MemberId,
-            <T as frame_system::Trait>::Hash,
-        >>::Currency as Currency<<T as frame_system::Trait>::AccountId>>::deposit_creating(
-            account_id, *amount,
-        );
+        let _ = balances::Module::<T>::deposit_creating(account_id, *amount);
 
         // update elected council member
         CouncilMembers::<T>::mutate(|members| {

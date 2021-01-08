@@ -371,6 +371,9 @@ decl_event! {
 
         /// Councilor reward has been updated.
         CouncilorRewardUpdated(Balance),
+
+        /// Request has been funded
+        RequestFunded(AccountId, Balance),
     }
 }
 
@@ -423,6 +426,9 @@ decl_error! {
 
         /// The member is not a councilor.
         NotCouncilor,
+
+        /// Insufficent funds in council for executing 'Funding Request'
+        InsufficientFundsForFundingRequest,
     }
 }
 
@@ -670,7 +676,7 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = 10_000_000]
+        #[weight = 10_000_000] // TODO: Adjust weight
         pub fn set_budget_increment(origin, budget_increment: Balance::<T>) -> Result<(), Error<T>> {
             // ensure action can be started
             EnsureChecks::<T>::can_set_budget_increment(origin)?;
@@ -689,7 +695,7 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = 10_000_000]
+        #[weight = 10_000_000] // TODO: Adjust weight
         pub fn set_councilor_reward(origin, councilor_reward: Balance::<T>) -> Result<(), Error<T>> {
             // ensure action can be started
             EnsureChecks::<T>::can_set_councilor_reward(origin)?;
@@ -706,6 +712,27 @@ decl_module! {
             Self::deposit_event(RawEvent::CouncilorRewardUpdated(councilor_reward));
 
             Ok(())
+        }
+
+        #[weight = 10_000_000] // TODO: adjust weight
+        pub fn funding_request(
+            origin,
+            amount: Balance::<T>,
+            account: T::AccountId,
+        ) {
+            // Checks
+            ensure_root(origin)?;
+            let current_budget = Self::budget();
+            ensure!(amount<=current_budget, Error::<T>::InsufficientFundsForFundingRequest);
+
+
+            //
+            // == MUTATION SAFE ==
+            //
+
+            Mutations::<T>::set_budget(&(current_budget - amount));
+            let  _ = balances::Module::<T>::deposit_creating(&account, amount);
+            Self::deposit_event(RawEvent::RequestFunded(account, amount));
         }
     }
 }
@@ -928,15 +955,17 @@ impl<T: Trait> Module<T> {
 
     fn calculate_on_initialize_weight(mb_candidate_count: Option<u64>) -> Weight {
         // Minimum weight for progress stage
-        let weight = T::WeightInfo::try_progress_stage_idle()
-            .max(T::WeightInfo::try_progress_stage_announcing_restart());
+        let weight = CouncilWeightInfo::<T>::try_progress_stage_idle()
+            .max(CouncilWeightInfo::<T>::try_progress_stage_announcing_restart());
 
         let weight = if let Some(candidate_count) = mb_candidate_count {
             // We can use the candidate count to calculate the worst case
             // if we are in announcement period without an additional storage access
-            weight.max(T::WeightInfo::try_progress_stage_announcing_start_election(
-                candidate_count.saturated_into(),
-            ))
+            weight.max(
+                CouncilWeightInfo::<T>::try_progress_stage_announcing_start_election(
+                    candidate_count.saturated_into(),
+                ),
+            )
         } else {
             // If we don't have the candidate count we only take into account the weight
             // of the functions that doesn't depend on it
@@ -944,7 +973,7 @@ impl<T: Trait> Module<T> {
         };
 
         // Total weight = try progress weight + try process budget weight
-        T::WeightInfo::try_process_budget().saturating_add(weight)
+        CouncilWeightInfo::<T>::try_process_budget().saturating_add(weight)
     }
 }
 

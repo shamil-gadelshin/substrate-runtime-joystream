@@ -74,7 +74,7 @@ impl ProposalEncoder<Runtime> for ExtrinsicProposalEncoder {
             ),
             ProposalDetails::SlashWorkingGroupLead(worker_id, slashing_stake, working_group) => {
                 let slashing_stake = Penalty {
-                    slashing_text: Vec::new(),
+                    slashing_text: Vec::new(), // Proposal description doubles as rationale
                     slashing_amount: slashing_stake,
                 };
 
@@ -209,7 +209,7 @@ where
         let penalty = if let Some(slashing_amount) = terminate_role_params.slashing_amount {
             Some(working_group::Penalty {
                 slashing_amount,
-                slashing_text: Vec::new(),
+                slashing_text: Vec::new(), // Proposal description doubles as rationale
             })
         } else {
             None

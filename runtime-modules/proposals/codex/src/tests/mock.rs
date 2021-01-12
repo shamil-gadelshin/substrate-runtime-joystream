@@ -246,6 +246,7 @@ impl VotersParameters for MockVotersParameters {
 
 // The forum working group instance alias.
 pub type ForumWorkingGroupInstance = working_group::Instance1;
+
 // The storage working group instance alias.
 pub type StorageWorkingGroupInstance = working_group::Instance2;
 

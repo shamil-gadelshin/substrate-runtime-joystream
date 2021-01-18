@@ -55,6 +55,13 @@ pub trait WorkingGroupBudgetWrapperHandler<Balance> {
     fn set_budget(&self, new_value: Balance);
 }
 
+// pub trait WorkingGroupBudgetProvider<Balance> {
+//     fn get_working_group_budget_handler(working_group: WorkingGroup) -> Box<dyn WorkingGroupBudgetWrapperHandler<Balance>>;
+// }
+
 pub trait WorkingGroupBudgetProvider<Balance> {
-    fn get_working_group_budget_handler(working_group: WorkingGroup) -> Box<dyn WorkingGroupBudgetWrapperHandler<Balance>>;
+    type WorkingGroupBudgetWrapperHandler: WorkingGroupBudgetWrapperHandler<Balance>;
+    fn get_working_group_budget_handler(
+        working_group: WorkingGroup,
+    ) -> Self::WorkingGroupBudgetWrapperHandler;
 }

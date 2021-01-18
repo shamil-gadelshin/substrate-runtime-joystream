@@ -816,12 +816,14 @@ macro_rules! call_wg_budget {
 
 pub struct WorkingGroupProvider;
 impl common::working_group::WorkingGroupBudgetProvider<Balance> for WorkingGroupProvider{
-    fn get_working_group_budget_handler(working_group: WorkingGroup) -> Box<dyn common::working_group::WorkingGroupBudgetWrapperHandler<Balance>> {
-       Box::new(WorkingGroupWrapper{working_group})
+    type WorkingGroupBudgetWrapperHandler = WorkingGroupWrapper;
+
+    fn get_working_group_budget_handler(working_group: WorkingGroup) -> Self::WorkingGroupBudgetWrapperHandler {
+       WorkingGroupWrapper{working_group}
     }
 }
 
-struct WorkingGroupWrapper {
+pub struct WorkingGroupWrapper {
     working_group: common::working_group::WorkingGroup
 }
 

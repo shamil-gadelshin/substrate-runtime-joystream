@@ -802,6 +802,39 @@ macro_rules! call_wg {
     }};
 }
 
+macro_rules! call_wg_budget {
+    ($working_group:expr, $function:ident $(,$x:expr)*) => {{
+        match $working_group {
+            WorkingGroup::Content => <ContentDirectoryWorkingGroup as common::working_group::WorkingGroupBudgetHandler<Runtime>>::$function($($x,)*),
+            _ => panic!(),
+            // WorkingGroup::Storage => StorageWorkingGroup::$function($($x,)*),
+            // WorkingGroup::Forum => ForumWorkingGroup::$function($($x,)*),
+            // WorkingGroup::Membership => MembershipWorkingGroup::$function($($x,)*),
+        }
+    }};
+}
+
+pub struct WorkingGroupProvider;
+impl common::working_group::WorkingGroupBudgetProvider<Balance> for WorkingGroupProvider{
+    fn get_working_group_budget_handler(working_group: WorkingGroup) -> Box<dyn common::working_group::WorkingGroupBudgetWrapperHandler<Balance>> {
+       Box::new(WorkingGroupWrapper{working_group})
+    }
+}
+
+struct WorkingGroupWrapper {
+    working_group: common::working_group::WorkingGroup
+}
+
+impl common::working_group::WorkingGroupBudgetWrapperHandler<Balance> for WorkingGroupWrapper{
+    fn get_budget(&self) -> Balance {
+        call_wg_budget!(self.working_group, get_budget)
+    }
+
+    fn set_budget(&self, new_value: Balance) {
+        call_wg_budget!(self.working_group, set_budget, new_value)
+    }
+}
+
 impl proposals_codex::Trait for Runtime {
     type MembershipOriginValidator = Members;
     type ProposalEncoder = ExtrinsicProposalEncoder;

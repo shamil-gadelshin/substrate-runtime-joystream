@@ -45,3 +45,16 @@ pub trait WorkingGroupBudgetHandler<T: balances::Trait> {
     /// Sets new working broup balance
     fn set_budget(new_value: T::Balance);
 }
+
+/// Working group interface wrapper to work with the working group budget.
+pub trait WorkingGroupBudgetWrapperHandler<Balance> {
+    /// Returns current working group balance.
+    fn get_budget(&self) -> Balance;
+
+    /// Sets new working group balance
+    fn set_budget(&self, new_value: Balance);
+}
+
+pub trait WorkingGroupBudgetProvider<Balance> {
+    fn get_working_group_budget_handler(working_group: WorkingGroup) -> Box<dyn WorkingGroupBudgetWrapperHandler<Balance>>;
+}

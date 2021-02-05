@@ -3,7 +3,6 @@
 pub(crate) mod fixtures;
 pub(crate) mod mocks;
 
-use frame_support::storage::StorageMap;
 use frame_system::RawOrigin;
 use sp_runtime::DispatchError;
 
@@ -476,7 +475,7 @@ fn fund_bounty_succeeds_with_reaching_max_funding_amount() {
         let bounty = Bounty::bounties(&bounty_id);
         assert_eq!(
             bounty.state,
-            BountyMilestone::MaxFundingReached(starting_block)
+            BountyMilestone::BountyMaxFundingReached(starting_block)
         );
 
         EventFixture::assert_last_crate_event(RawEvent::BountyMaxFundingReached(bounty_id));

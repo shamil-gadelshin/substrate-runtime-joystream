@@ -388,16 +388,15 @@ decl_module! {
 
             bounty_creator_manager.validate_creator(&bounty.creation_params.creator)?;
 
-            // TODO: ensure no funding
             let current_bounty_stage = Self::get_bounty_stage(&bounty);
-            // TODO: ensure no funding
+
             ensure!(
-                !Self::bounty_funding_started(&bounty_id),
+                matches!(current_bounty_stage, BountyStage::Funding),
                 Error::<T>::InvalidBountyStage,
             );
 
             ensure!(
-                matches!(current_bounty_stage, BountyStage::Funding),
+                !Self::bounty_funding_started(&bounty_id),
                 Error::<T>::InvalidBountyStage,
             );
 
@@ -430,16 +429,15 @@ decl_module! {
 
             let mut bounty = <Bounties<T>>::get(bounty_id);
 
-            // TODO: ensure no funding
             let current_bounty_stage = Self::get_bounty_stage(&bounty);
-            // TODO: ensure no funding
+
             ensure!(
-                !Self::bounty_funding_started(&bounty_id),
+                matches!(current_bounty_stage, BountyStage::Funding),
                 Error::<T>::InvalidBountyStage,
             );
 
             ensure!(
-                matches!(current_bounty_stage, BountyStage::Funding),
+                !Self::bounty_funding_started(&bounty_id),
                 Error::<T>::InvalidBountyStage,
             );
 
@@ -489,7 +487,7 @@ decl_module! {
                 matches!(current_bounty_stage, BountyStage::Funding),
                 Error::<T>::InvalidBountyStage,
             );
-            Self::ensure_bounty_stage_is_valid_for_member_funding(&bounty)?;
+       //     Self::ensure_bounty_stage_is_valid_for_member_funding(&bounty)?; //TODO: remove
 
             //
             // == MUTATION SAFE ==
@@ -503,7 +501,7 @@ decl_module! {
             let maximum_funding_reached =
                 bounty.total_funding >= bounty.creation_params.max_amount;
             if  maximum_funding_reached{
-                bounty.state = BountyMilestone::MaxFundingReached(Self::current_block());
+                bounty.state = BountyMilestone::BountyMaxFundingReached(Self::current_block());
             }
 
             <Bounties<T>>::insert(bounty_id, bounty);
@@ -538,7 +536,7 @@ decl_module! {
 
             let mut bounty = <Bounties<T>>::get(bounty_id);
 
-            Self::ensure_bounty_stage_is_valid_for_member_withdrawal(&bounty)?;
+            // Self::ensure_bounty_stage_is_valid_for_member_withdrawal(&bounty)?; //TODO: remove
 
             ensure!(
                 <Funding<T>>::contains_key(bounty_id, member_id),
@@ -553,7 +551,7 @@ decl_module! {
 
             let _ = balances::Module::<T>::deposit_creating(&account_id, funding_amount);
 
-            bounty.current_funding = bounty.current_funding.saturating_sub(funding_amount);
+            bounty.total_funding = bounty.total_funding.saturating_sub(funding_amount);
             <Bounties<T>>::insert(bounty_id, bounty);
 
             <Funding<T>>::remove(bounty_id, member_id);
@@ -730,7 +728,7 @@ impl<T: Trait> Module<T> {
             }
             // Bounty was canceled or vetoed.
             BountyMilestone::Canceled => BountyStage::Canceled,
-            BountyMilestone::MaxFundingReached(funding_completed) => {
+            BountyMilestone::BountyMaxFundingReached(funding_completed) => {
                 // Work period is not over.
                 if bounty.creation_params.work_period + funding_completed <= now {
                     BountyStage::WorkSubmission
@@ -742,50 +740,50 @@ impl<T: Trait> Module<T> {
             }
         }
     }
-    // Checks for a bounty stage during the member funding withdrawal.
-    fn ensure_bounty_stage_is_valid_for_member_withdrawal(bounty: &Bounty<T>) -> DispatchResult {
-        // Ensure funding period is over.
-        match bounty.stage {
-            BountyStage::Funding(created_at) => {
-                if let Some(funding_period) = bounty.creation_params.funding_period {
-                    ensure!(
-                        created_at + funding_period < Self::current_block(),
-                        Error::<T>::FundingPeriodNotExpired,
-                    );
-                }
-            }
-            BountyStage::Canceled | BountyStage::Vetoed => {
-                // allowed withdrawal stages
-            }
-            _ => {
-                return Err(Error::<T>::InvalidBountyStage.into());
-            }
-        }
+    // // Checks for a bounty stage during the member funding withdrawal.
+    // fn ensure_bounty_stage_is_valid_for_member_withdrawal(bounty: &Bounty<T>) -> DispatchResult {
+    //     // Ensure funding period is over.
+    //     match bounty.stage {
+    //         BountyStage::Funding(created_at) => {
+    //             if let Some(funding_period) = bounty.creation_params.funding_period {
+    //                 ensure!(
+    //                     created_at + funding_period < Self::current_block(),
+    //                     Error::<T>::FundingPeriodNotExpired,
+    //                 );
+    //             }
+    //         }
+    //         BountyStage::Canceled | BountyStage::Vetoed => {
+    //             // allowed withdrawal stages
+    //         }
+    //         _ => {
+    //             return Err(Error::<T>::InvalidBountyStage.into());
+    //         }
+    //     }
+    //
+    //     // Ensure the bounty failed to gather minimum funding amount.
+    //     ensure!(
+    //         bounty.current_funding < bounty.creation_params.min_amount,
+    //         Error::<T>::InvalidBountyStage
+    //     );
+    //
+    //     Ok(())
+    // }
 
-        // Ensure the bounty failed to gather minimum funding amount.
-        ensure!(
-            bounty.current_funding < bounty.creation_params.min_amount,
-            Error::<T>::InvalidBountyStage
-        );
-
-        Ok(())
-    }
-
-    // Checks for a bounty stage during the member funding.
-    fn ensure_bounty_stage_is_valid_for_member_funding(bounty: &Bounty<T>) -> DispatchResult {
-        if let BountyStage::Funding(created_at) = bounty.stage {
-            if let Some(funding_period) = bounty.creation_params.funding_period {
-                ensure!(
-                    created_at + funding_period >= Self::current_block(),
-                    Error::<T>::FundingPeriodExpired,
-                );
-            }
-        } else {
-            return Err(Error::<T>::InvalidBountyStage.into());
-        }
-
-        Ok(())
-    }
+    // // Checks for a bounty stage during the member funding.
+    // fn ensure_bounty_stage_is_valid_for_member_funding(bounty: &Bounty<T>) -> DispatchResult {
+    //     if let BountyStage::Funding(created_at) = bounty.stage {
+    //         if let Some(funding_period) = bounty.creation_params.funding_period {
+    //             ensure!(
+    //                 created_at + funding_period >= Self::current_block(),
+    //                 Error::<T>::FundingPeriodExpired,
+    //             );
+    //         }
+    //     } else {
+    //         return Err(Error::<T>::InvalidBountyStage.into());
+    //     }
+    //
+    //     Ok(())
+    // }
 
     // Verifies that bounty has some funding.
     fn bounty_funding_started(bounty_id: &T::BountyId) -> bool {

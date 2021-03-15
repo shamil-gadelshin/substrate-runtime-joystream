@@ -1,0 +1,52 @@
+openapi: 3.0.3
+info:
+  title: Storage node API
+  description: - 
+  contact:
+    email: -
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  version: 0.1.0
+externalDocs:
+  description:
+  url:
+servers:
+- url: /api/v1
+ 
+tags:
+  - name: greeting
+    description: Greeting APIs
+ 
+paths:
+  /hello/{name}:
+    get:
+      operationId: greeting.hello
+      description: Returns 'Hello <name>/stranger!!!' to the caller
+      tags: 
+        - greeting
+      parameters:
+      - name: name
+        required: true
+        in: path
+        description: The name of a caller
+        schema:
+          type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelloResponse'
+ 
+components:
+  schemas:
+    HelloResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - message
+      properties:
+        message:
+          type: string

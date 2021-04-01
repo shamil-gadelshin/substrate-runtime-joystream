@@ -2,8 +2,8 @@ import {createServer} from './api/server'
 
 createServer()
   .then(server => {
-    server.listen(3000, () => {
-      console.info(`Listening on http://localhost:3000`)
+    server.listen(4000, () => {
+      console.info(`Listening on http://localhost:4000`)
     })
   })
   .catch(err => {

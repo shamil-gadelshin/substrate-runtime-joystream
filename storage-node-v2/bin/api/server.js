@@ -26,24 +26,45 @@ exports.createServer = void 0;
 const express_1 = __importDefault(require("express"));
 const path_1 = __importDefault(require("path"));
 const OpenApiValidator = __importStar(require("express-openapi-validator"));
+// import multer from 'multer'
 async function createServer() {
     const server = express_1.default();
-    server.get('/', (req, res) => {
-        res.send('Hello world!!!');
+    // Placeholder for the form input
+    server.get('/', function (_, res) {
+        res.send('<html><head></head><body>\
+               <form method="POST" enctype="multipart/form-data" action="/upload">\
+                <input type="file" name="recfile"><br />\
+                <input type="submit">\
+              </form>\
+            </body></html>');
+        res.end();
     });
-    //  server.get('/api/v1/hello/:name', hello);
-    const spec = path_1.default.join(__dirname, './../../config/openapi.yaml');
-    //TODO: localhost only?
+    const spec = path_1.default.join(__dirname, './../../api-spec/openapi.yaml');
+    // TODO: localhost only?
     server.use('/spec', express_1.default.static(spec));
-    const handlerPath = path_1.default.join(__dirname, './controllers');
+    // TODO: server swagger UI
+    // const upload = multer({ dest: 'uploads/' })
+    // server.post('/upload', upload.single('recfile'), (req, res, _) => {
+    //   const file = req.file
+    //   console.log(file)
+    //   // if (!file) {
+    //   //   const error = new Error('Please upload a file')
+    //   //   error.httpStatusCode = 400
+    //   //   return next(error)
+    //   // }
+    //     res.send(file)
+    // })
     server.use(OpenApiValidator.middleware({
         apiSpec: spec,
-        //      validateApiSpec: true,
-        //     validateResponses: true,
+        validateApiSpec: true,
+        validateResponses: true,
         validateRequests: true,
-        operationHandlers: handlerPath
+        operationHandlers: {
+            basePath: path_1.default.join(__dirname, './controllers'),
+            resolver: OpenApiValidator.resolvers.modulePathResolver
+        },
+        fileUploader: { dest: './auto_uploads/' }
     }));
-    console.log(__dirname);
     //   server.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     //     res.status(err.status).json({
     //       error: {
@@ -53,13 +74,13 @@ async function createServer() {
     //       }
     //     })
     //   })
-    server.use((err, req, res, next) => {
-        // format errors
-        res.status(err.status || 500).json({
-            message: err.message,
-            errors: err.errors,
-        });
-    });
+    // server.use((err: any, req: any, res: any, next: any) => {
+    //     // format errors
+    //     res.status(err.status || 500).json({
+    //       message: err.message,
+    //       errors: err.errors,
+    //     });
+    //   });
     return server;
 }
 exports.createServer = createServer;

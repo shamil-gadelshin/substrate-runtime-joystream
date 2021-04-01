@@ -1,9 +1,7 @@
 import * as express from 'express'
  
-export function upload(req: express.Request, res: express.Response): void {
-  const name = req.query.name || 'stranger'
-  const message = `Hello, ${name}!`
+export function upload(_: express.Request, res: express.Response): void {
   res.json({
-    "message": message
-  })
+      file: "received"
+  });
 }

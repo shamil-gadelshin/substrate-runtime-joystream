@@ -46,7 +46,20 @@ export async function createServer(): Promise<Express> {
           basePath: path.join(__dirname, './controllers'),
           resolver: OpenApiValidator.resolvers.modulePathResolver
       },
-      fileUploader : { dest: './auto_uploads/' }
+      fileUploader : { dest: './auto_uploads/' },
+      validateSecurity: {
+        handlers: {
+          ApiKeyAuth: (req: express.Request, _scopes: string[], _schema : any) => {
+            const apiKey = req.query["X-API-Key"]
+            console.log(apiKey)
+            if (apiKey === "key") {
+              return true
+            }
+
+            return false
+          }
+        }
+      }
     }),
   );
 

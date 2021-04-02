@@ -21,6 +21,8 @@ tags:
 paths:
   /hello/{name}:
     get:
+      security:
+        - ApiKeyAuth: []
       operationId: greeting.hello
       description: Returns 'Hello <name>/stranger!!!' to the caller
       tags: 
@@ -39,6 +41,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HelloResponse'
+        401:
+          description: Unauthorized
   /upload:
     post:
       description: Upload data
@@ -69,6 +73,11 @@ paths:
                     type: boolean
 
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: query
+      name: X-API-Key
   schemas:
     HelloResponse:
       type: object
